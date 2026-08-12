@@ -1,0 +1,364 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                       Int                  @id @default(autoincrement())
+  email                    String?              @unique
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  isEmailVerified          Boolean              @default(false)
+  isMobileVerified         Boolean              @default(false)
+  mobile                   String
+  isActive                 Boolean              @default(true)
+  lastLogin                DateTime?
+  deletedAt                DateTime?
+  isDeleted                Boolean              @default(false)
+  biodata                  Biodata?
+  notifications            Notification[]
+  partnerPreference        PartnerPreference?
+  personalInformation      PersonalInformation?
+  receivedProfileInterests ProfileInterest[]    @relation("InterestReceiver")
+  sentProfileInterests     ProfileInterest[]    @relation("InterestSender")
+  sessions                 Session[]
+  successStory             SuccessStory?
+  devices                  UserDevice[]
+  photos                   UserPhoto[]
+  profile                  UserProfile?
+  reports                  ReportProblem[]
+  blockedUsers             BlockedUser[]        @relation("BlockerRelation")
+  blockedByUsers           BlockedUser[]        @relation("BlockedRelation")
+  reportedUsers            ReportedUser[]       @relation("ReporterRelation")
+  reportedByUsers          ReportedUser[]       @relation("ReportedRelation")
+  pushNotificationEnabled  Boolean              @default(true)
+  matchAlertEnabled        Boolean              @default(true)
+
+  @@index([mobile])
+}
+
+model SuccessStory {
+  id             Int                 @id @default(autoincrement())
+  userId         Int                 @unique
+  partnerName    String
+  partnerId      String?
+  marriageDate   DateTime
+  title          String
+  story          String
+  rating         Int
+  wouldRecommend Boolean
+  status         SuccessStoryStatus  @default(PENDING)
+  isPublished    Boolean             @default(false)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos         SuccessStoryPhoto[]
+
+  @@index([partnerId])
+}
+
+model SuccessStoryPhoto {
+  id             Int          @id @default(autoincrement())
+  successStoryId Int
+  photoUrl       String
+  fileId         String
+  createdAt      DateTime     @default(now())
+  successStory   SuccessStory @relation(fields: [successStoryId], references: [id], onDelete: Cascade)
+}
+
+model PersonalInformation {
+  id                 Int      @id @default(autoincrement())
+  userId             Int      @unique
+  email              String?
+  address            String?
+  city               String?
+  state              String?
+  fatherName         String?
+  fatherMobileNumber String?
+  fatherOccupation   String?
+  motherName         String?
+  motherOccupation   String?
+  numberOfBrothers   Int?
+  marriedBrothers    Int?
+  numberOfSisters    Int?
+  marriedSisters     Int?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserProfile {
+  id            Int           @id @default(autoincrement())
+  userId        Int           @unique
+  fullName      String
+  dateOfBirth   DateTime
+  city          String?
+  profession    String?
+  education     String?
+  bio           String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  profilePhoto  String?
+  country       String?
+  state         String?
+  gender        Gender
+  lookingFor    LookingFor
+  maritalStatus MaritalStatus
+  height        String
+  interest      String[]
+  successStory  Boolean       @default(false)
+  drinking      String?
+  smoking       String?
+  user          User          @relation(fields: [userId], references: [id])
+
+  @@index([gender])
+  @@index([lookingFor])
+  @@index([maritalStatus])
+  @@index([dateOfBirth])
+  @@index([createdAt])
+  @@index([successStory])
+}
+
+model PartnerPreference {
+  id              Int             @id @default(autoincrement())
+  userId          Int             @unique
+  minAge          Int?
+  maxAge          Int?
+  maritalStatuses MaritalStatus[]
+  educations      String[]
+  professions     String[]
+  countries       String[]
+  states          String[]
+  cities          String[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  user            User            @relation(fields: [userId], references: [id])
+}
+
+model Biodata {
+  id          Int         @id @default(autoincrement())
+  userId      Int         @unique
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  biodataUrl  String?
+  isGenerated Boolean     @default(false)
+  biodataType BiodataType
+  user        User        @relation(fields: [userId], references: [id])
+}
+
+model Otp {
+  id        Int      @id @default(autoincrement())
+  mobile    String?
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  email     String?
+
+  @@index([mobile])
+  @@index([otp])
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  token        String
+  deviceId     String?
+  deviceName   String?
+  ipAddress    String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  refreshToken String?
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([refreshToken])
+}
+
+model UserPhoto {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  photoUrl     String
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  displayOrder Int      @default(1)
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model ProfileInterest {
+  id         Int            @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  status     InterestStatus @default(PENDING)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  receiver   User           @relation("InterestReceiver", fields: [receiverId], references: [id])
+  sender     User           @relation("InterestSender", fields: [senderId], references: [id])
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+}
+
+model UserDevice {
+  id        Int            @id @default(autoincrement())
+  userId    Int
+  deviceId  String
+  fcmToken  String
+  platform  DevicePlatform
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId])
+  @@index([userId])
+}
+
+model Notification {
+  id          Int              @id @default(autoincrement())
+  userId      Int
+  title       String
+  body        String
+  type        NotificationType
+  referenceId Int?
+  isRead      Boolean          @default(false)
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model ReportProblem {
+  id            Int            @id @default(autoincrement())
+  userId        Int
+  category      ReportCategory
+  subject       String
+  description   String
+  screenshotUrl String?
+  appVersion    String?
+  deviceInfo    String?
+  osVersion     String?
+  status        ReportStatus   @default(OPEN)
+  adminRemark   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum ReportCategory {
+  BUG
+  TECHNICAL
+  PAYMENT
+  PROFILE
+  ACCOUNT
+  ABUSE
+  FEATURE_REQUEST
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  IN_PROGRESS
+  APPROVED
+  REJECTED
+  RESOLVED
+  CLOSED
+}
+
+enum NotificationType {
+  PROFILE_MATCH
+  INTEREST_RECEIVED
+  INTEREST_ACCEPTED
+  INTEREST_CANCELLED
+  CHAT_MESSAGE
+  ADMIN
+}
+
+enum DevicePlatform {
+  ANDROID
+  IOS
+}
+
+enum InterestStatus {
+  PENDING
+  ACCEPTED
+  CANCELLED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum LookingFor {
+  BRIDE
+  GROOM
+}
+
+enum MaritalStatus {
+  NEVER_MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum BiodataType {
+  GENERATED
+  UPLOADED
+}
+
+enum PreferenceOption {
+  YES
+  NO
+  DOESNT_MATTER
+}
+
+enum SuccessStoryStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model BlockedUser {
+  id           Int      @id @default(autoincrement())
+  blockerId    Int
+  blockedId    Int
+  createdAt    DateTime @default(now())
+  
+  blocker      User     @relation("BlockerRelation", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked      User     @relation("BlockedRelation", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+model ReportedUser {
+  id           Int      @id @default(autoincrement())
+  reporterId   Int
+  reportedId   Int
+  reason       String
+  description  String?
+  createdAt    DateTime @default(now())
+  
+  reporter     User     @relation("ReporterRelation", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported     User     @relation("ReportedRelation", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  @@unique([reporterId, reportedId, reason])
+  @@index([reporterId])
+  @@index([reportedId])
+}
+
