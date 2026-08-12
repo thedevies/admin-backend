@@ -4,6 +4,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { RedisModule } from './common/redis/redis.module';
+import { StorageModule } from './common/storage/storage.module';
+import { AppService } from './app.service';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -12,11 +16,13 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
       envFilePath: '.env',
     }),
     PrismaModule,
+    RedisModule,
+    StorageModule,
     AuthModule,
     AdminModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
