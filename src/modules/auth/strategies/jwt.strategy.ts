@@ -9,7 +9,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET,
+      secretOrKey: process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || 'secret',
       algorithms: ['HS256'],
       passReqToCallback: true,
     });
@@ -17,6 +17,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(req: any, payload: any) {
     const rawToken = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+
+    if (payload.adminLogin) {
+      const admin = await this.prisma.adminAccount.findUnique({
+        where: { id: payload.userId },
+      });
+      if (!admin || admin.status !== 'Active') {
+        throw new UnauthorizedException('Admin account not found or inactive');
+      }
+      return admin;
+    }
 
     const user = await this.prisma.user.findUnique({
       where: {
