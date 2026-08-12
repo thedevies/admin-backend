@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { RequestMethod } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -10,7 +11,9 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+    exclude: [{ path: '/', method: RequestMethod.GET }],
+  });
 
   const port = process.env.PORT || 3002;
   await app.listen(port);
