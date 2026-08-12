@@ -362,3 +362,15 @@ model ReportedUser {
   @@index([reportedId])
 }
 
+model AdminAccount {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  mobile    String   @unique
+  role      String
+  password  String
+  avatar    String?
+  status    String   @default("Active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

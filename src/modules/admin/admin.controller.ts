@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards, Patch, Body, Post } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Patch, Body, Post, Delete } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AdminService } from './admin.service';
 
@@ -15,6 +15,34 @@ export class AdminController {
       message: 'User activation status toggled successfully',
       data
     };
+  }
+
+
+  
+  @Get('accounts')
+  async getAdminAccounts() {
+    const data = await this.adminService.getAdminAccounts();
+    return { success: true, message: 'Admin accounts fetched successfully', data };
+  }
+
+  @Post('accounts')
+  async addAdminAccount(@Body() data: any) {
+    try {
+      const result = await this.adminService.addAdminAccount(data);
+      return { success: true, message: 'Admin account created successfully', data: result };
+    } catch (e) {
+      return { success: false, message: e.message };
+    }
+  }
+
+  @Delete('accounts/:email')
+  async deleteAdminAccount(@Param('email') email: string) {
+    try {
+      const result = await this.adminService.deleteAdminAccount(email);
+      return { success: true, message: 'Admin account deleted successfully', data: result };
+    } catch (e) {
+      return { success: false, message: e.message };
+    }
   }
 
 

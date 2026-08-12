@@ -54,6 +54,16 @@ export class AuthController {
     return this.authService.adminLogin(mobile, fcmToken, deviceId);
   }
 
+  @Post('admin-login-step1')
+  adminLoginStep1(@Body() body: { email: string; password: string }) {
+    return this.authService.adminLoginStep1(body.email, body.password);
+  }
+
+  @Post('admin-login-step2')
+  adminLoginStep2(@Body() body: { email: string; otp: string }) {
+    return this.authService.adminLoginStep2(body.email, body.otp);
+  }
+
   @Post('login-history/:userId')
   getLoginHistory(@Param('userId') userId: string) {
     return this.authService.getLoginHistory(Number(userId));

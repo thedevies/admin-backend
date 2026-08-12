@@ -27,6 +27,46 @@ export class AdminService {
     }
   }
 
+  
+  async getAdminAccounts() {
+    return await this.prisma.adminAccount.findMany({
+      select: { name: true, email: true, mobile: true, role: true, avatar: true, status: true, createdAt: true },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async addAdminAccount(data: any) {
+    const existing = await this.prisma.adminAccount.findFirst({
+      where: {
+        OR: [ { email: data.email }, { mobile: data.mobile } ]
+      }
+    });
+    if (existing) {
+      throw new Error('An administrator with this email or mobile already exists.');
+    }
+    return await this.prisma.adminAccount.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        mobile: data.mobile,
+        role: data.role,
+        password: data.password,
+        status: data.status || 'Active',
+      }
+    });
+  }
+
+  async deleteAdminAccount(email: string) {
+    // Prevent deleting primary super admins
+    if (email === 'satish.hande@vvsdhruvexa.in' || email === 'shivraj.taware@vvsdhruvexa.in') {
+      throw new Error('Cannot delete primary system administrator accounts.');
+    }
+    return await this.prisma.adminAccount.delete({
+      where: { email }
+    });
+  }
+
+
   async getAllProfiles() {
     const users = await this.prisma.user.findMany({
       include: {
